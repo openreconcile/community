@@ -1,0 +1,11 @@
+{
+  "apiVersion": "reconcilebench.openreconcile.org/v1alpha1",
+  "kind": "Evidence",
+  "target": "",
+  "engine": "none",
+  "scenario": "adhoc",
+  "asOf": "2026-09-13T15:17:42Z",
+  "converged": true,
+  "findings": null,
+  "next": null
+}

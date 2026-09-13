@@ -1,0 +1,17 @@
+# Labelled mutant.
+apiVersion: compute.k8sbricks.io/v1alpha1
+kind: Cluster
+metadata:
+  name: happy-fail
+  generation: 1
+spec:
+  sparkVersion: 15.4.x-scala2.12
+  nodeTypeId: i3.xlarge
+status:
+  externalID: dbc-1
+  phase: RUNNING
+  conditions:
+    - type: Ready
+      status: "True"
+      reason: Ready
+      message: databricks cluster dbc-1 is RUNNING

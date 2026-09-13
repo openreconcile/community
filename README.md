@@ -25,6 +25,7 @@ result behaves correctly under failure, is not.
 | checking a differentiation claim | `docs/context/PRIOR_ART.md`, then `docs/context/GATE1.md` |
 | wondering why a decision was made | `docs/context/DECISIONS.md`, then `sources/` |
 | an MLE wanting an operator from English | `.cursor/skills/new-operator/` |
+| an existing-operator maintainer | `.cursor/skills/onboard/` |
 | checking launch readiness | `docs/process/LAUNCH.md` |
 
 ## Layout

@@ -1,0 +1,19 @@
+# Labelled mutant: same object with observedGeneration omitted.
+apiVersion: capacity.kubereserve.io/v1alpha1
+kind: Reservation
+metadata:
+  name: dry-fail
+  generation: 1
+spec:
+  provider: aws
+  ttl: 1h
+  instanceType: m5.xlarge
+  availabilityZone: us-east-1a
+  budgetUSD: 25
+status:
+  expiresAt: "2026-09-13T16:00:00Z"
+  conditions:
+    - type: Ready
+      status: "False"
+      reason: LifecycleOnly
+      message: dryRun=true; no cloud reservation created

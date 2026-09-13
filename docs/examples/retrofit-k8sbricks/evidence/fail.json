@@ -1,0 +1,24 @@
+{
+  "apiVersion": "reconcilebench.openreconcile.org/v1alpha1",
+  "kind": "Evidence",
+  "target": "",
+  "engine": "none",
+  "scenario": "adhoc",
+  "asOf": "2026-09-13T15:19:25Z",
+  "converged": false,
+  "findings": [
+    {
+      "id": "missing-observed-generation",
+      "class": "status-contract",
+      "severity": "error",
+      "message": "status.observedGeneration is missing or zero after reconcile",
+      "hint": "set status.observedGeneration = metadata.generation on every successful reconcile of that generation"
+    }
+  ],
+  "next": [
+    "read each finding.hint",
+    "apply a minimal fix",
+    "re-run reconcilebench verify --scenario \u003cthis scenario\u003e",
+    "do not claim resilience from a single passing run"
+  ]
+}

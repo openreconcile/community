@@ -1,0 +1,14 @@
+apiVersion: operator-chaos.io/v1alpha1
+kind: Knowledge
+metadata:
+    name: kubereserve
+spec:
+    operator:
+        name: kubereserve
+        managedResources:
+            - group: capacity.kubereserve.io
+              kind: Reservation
+    statusContract:
+        observedGeneration: status.observedGeneration
+        conditions:
+            - Ready

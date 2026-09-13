@@ -1,0 +1,20 @@
+apiVersion: capacity.kubereserve.io/v1alpha1
+kind: Reservation
+metadata:
+  name: dry-pass
+  generation: 1
+spec:
+  provider: aws
+  ttl: 1h
+  instanceType: m5.xlarge
+  availabilityZone: us-east-1a
+  budgetUSD: 25
+status:
+  observedGeneration: 1
+  expiresAt: "2026-09-13T16:00:00Z"
+  conditions:
+    - type: Ready
+      status: "False"
+      reason: LifecycleOnly
+      message: dryRun=true; no cloud reservation created
+      observedGeneration: 1

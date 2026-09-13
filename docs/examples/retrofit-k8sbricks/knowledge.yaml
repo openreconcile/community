@@ -1,0 +1,14 @@
+apiVersion: operator-chaos.io/v1alpha1
+kind: Knowledge
+metadata:
+    name: k8sbricks
+spec:
+    operator:
+        name: k8sbricks
+        managedResources:
+            - group: compute.k8sbricks.io
+              kind: Cluster
+    statusContract:
+        observedGeneration: status.observedGeneration
+        conditions:
+            - Ready
