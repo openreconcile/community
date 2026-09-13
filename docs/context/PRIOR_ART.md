@@ -5,8 +5,9 @@ exist. That claim is only as good as this file. Every tool that plausibly overla
 here, with its maintenance status and its actual mechanism, so the claim can be checked
 rather than repeated.
 
-**Status of this register:** desk research complete as of September 2026. **Nothing in the
-research-tool section below has been executed yet.** Running it is workstream F0.
+**Status of this register:** desk research complete as of September 2026. F0 source-level
+analysis complete — see §6. **Neither tool has been run yet**; execution is the remainder of
+F0.
 
 ---
 
@@ -219,7 +220,117 @@ seven planned defect branches. That is a gap in our fixture, not in Sieve.
 
 ---
 
-## 6. Name collision
+## 6. F0 findings — source-level analysis
+
+**Date: 2026-09-13. Method: read the source of both tools at `HEAD`. Neither has been
+executed. Treat everything here as provisional until it is.**
+
+### Sieve's onboarding cost is far worse than "port the controller"
+
+`build.py` reveals the real setup path: `download_kubernetes` → `instrument_kubernetes` →
+`build_kubernetes` → `kind build node-image`. Sieve **downloads Kubernetes source, patches
+it with its own instrumentation tool, and builds a custom kind node image.** Interposing at
+the API server is achieved by shipping a modified Kubernetes.
+
+Version evidence: `go.work` declares go 1.19, the three Go modules declare go 1.13,
+`sieve_server/go.mod` pins `k8s.io/api v0.18.9`, `docs/demo.md` uses Kubernetes branch
+`v1.18.9`, and `docs/port.md` gives `v1.23.1` as the example. Against current Kubernetes
+(1.34/1.35) that is 11–16 minor versions of drift in a tool that compiles Kubernetes from
+source, with no commit since September 2024.
+
+Stale-state testing additionally requires a three-node control plane —
+`config.json` sets `leading_api: kind-control-plane` and
+`following_api: kind-control-plane3`.
+
+**Assessment:** Sieve is very unlikely to run as-is, and reviving it means maintaining a
+patched Kubernetes fork. That is not a cost this project can carry, and it is strong
+evidence for *why* a rigorous approach was abandoned rather than adopted.
+
+### Sieve has exactly three fault policies, and no external-boundary concept
+
+`sieve_perturbation_policies/` contains precisely `intermediate_state.py`, `stale_state.py`,
+and `unobserved_state.py`. Nothing else.
+
+A search across the entire Sieve source and docs for external API, non-Kubernetes, cloud
+API, HTTP proxy, or egress concepts returned **zero matches**. Sieve's model is the
+controller's view of *cluster* state. It has no vocabulary for a fault at an external
+service boundary.
+
+**This confirms the strongest remaining novelty candidate in `PROJECT-CONTEXT.md` §2.**
+
+### Both tools deliberately mask `observedGeneration` — and it is one of our defect classes
+
+This is the most useful finding and it was not anticipated.
+
+Sieve's `config.json` applies a global `field_path_mask` for `*/*/*` that includes
+`["status", "observedGeneration"]` and `["status", "conditions"]`.
+
+Acto's `EXCLUDE_PATH_REGEX` in `acto/common.py` includes `observed_generation`,
+`observedGeneration`, `generation`, `resourceVersion`, and `managedFields`.
+
+Both exclude these fields for the same reason this project already understands: they change
+for non-semantic reasons and produce false positives. But the consequence is that **neither
+tool can detect a controller that never updates `observedGeneration`, or one that reports
+incorrect conditions.** `defect/missing-observed-generation` is invisible to both by
+configuration, not by accident.
+
+Separately, Acto's `EXCLUDE_ERROR_REGEX` suppresses log messages matching
+`failed to sync(.)*status` — its log-based oracle is explicitly tuned to ignore status-sync
+failures as noise. This does not prove its consistency oracle would miss a split write, but
+it is a pointer at the same blind spot.
+
+**Why this matters.** The project's semantic-convergence definition already distinguishes
+non-semantic churn from semantic meaning, and its convention rules already treat
+`observedGeneration` and condition correctness as load-bearing API surface. That is
+precisely the distinction both tools collapsed in order to control false positives. A
+convergence oracle that can tell "this field changed for a non-semantic reason" from "this
+controller never reports which generation it observed" is a real capability neither has —
+and it is cheap.
+
+### Acto is the better-engineered starting point
+
+Acto takes standard `kindest/node:{version}` images with a configurable version
+(`acto/kubernetes_engine/kind.py`), needs only the operator's deployment script, is
+Apache-2.0, and has commits into 2026. It has also grown beyond the paper:
+`acto/runner/fault_injection_runner.py` and `acto/post_process/simple_crash_test.py` add
+crash injection, though as a post-processing pass rather than a fault timed to a
+reconciliation phase.
+
+If Gate 1 returns outcome F (contribute upstream), Acto is the target, not Sieve.
+
+### Provisional coverage map
+
+Against the eight fixture defect branches. **Predicted from source, not measured.**
+
+| Branch | Sieve | Acto |
+|---|---|---|
+| `defect/duplicate-create` | likely — intermediate-state | partial — crash test, not phase-timed |
+| `defect/unobserved-event` | **yes** — unobserved-state | no |
+| `defect/stale-cache` | yes, at the cost of a patched Kubernetes and 3 control planes | no |
+| `defect/missing-observed-generation` | **no — masked by config** | **no — masked by EXCLUDE_PATH_REGEX** |
+| `defect/split-write` | no external-boundary model | uncertain; log oracle suppresses status-sync errors |
+| `defect/finalizer-deadlock` | partial | partial — deletion is checked |
+| `defect/ownership-conflict` | partial, via intermediate-state | no |
+| `defect/retry-storm` | no — no write-frequency oracle | no |
+
+If this map survives execution, F1 returns something like: generic mid-reconcile fault
+injection **REFRAMED** (Sieve did it first, better, and it died of maintenance cost);
+external-boundary partial success **VALIDATED**; status-semantics oracles — `observedGeneration`,
+conditions, write-frequency — **VALIDATED** and cheap.
+
+### Remaining F0 work
+
+1. Run Acto end-to-end against one public operator. Measure onboarding hours.
+2. Attempt Sieve's build and record exactly where it fails. A precise failure is publishable
+   evidence about maintenance cost.
+3. Confirm from execution, not source, whether Acto's consistency oracle catches a split
+   write.
+4. Search once more for a maintained proxy-based Kubernetes API fault injector.
+5. Decide whether to open a conversation with the Acto maintainers.
+
+---
+
+## 7. Name collision
 
 An older, dormant "Open Reconcile" exists — Rebecca Lawler's project, cloned at
 `OpenRefine/open-reconcile`, Java package `com.googlecode.openreconcile`. Dead since ~2012.
@@ -231,7 +342,7 @@ entirely.
 
 ---
 
-## 7. Open prior-art questions for F0
+## 8. Open prior-art questions for F0
 
 1. Does Sieve still build and run against current Kubernetes (1.34/1.35) and current
    `controller-runtime`, or has it bit-rotted since September 2024?
