@@ -1,5 +1,9 @@
 # OpenReconcile — Current Falsification Execution Model
 
+**Gate 1 closed 2026-09-13.** See `GATE1.md`. Phase A below is historical procedure;
+do not reopen outcome A or a new injector. Remaining open workstreams: F2, F3, F6
+measurement.
+
 ## Core rule
 
 The falsification process must not become a procrastination mechanism.

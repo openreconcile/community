@@ -16,11 +16,11 @@ Create first:
 
 - [ ] `.github`
 - [x] `community`
-- [ ] `reconcilebench-fixture` — after the F0 spike
-- [ ] `reconcilebench` — blocked until Gate 1 clarifies architecture
+- [ ] `reconcilebench-fixture`
+- [ ] `reconcilebench` — Gate 1 shape is ADR-0001
 
-`controller-template` is **deferred** (decided 2026-09-13); its checklist below applies
-whenever it is eventually created.
+`controller-template` is authorised after the fixture; its checklist below applies
+when created.
 
 Stage production repos deliberately:
 

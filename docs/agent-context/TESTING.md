@@ -1,14 +1,3 @@
----
-description: ReconcileBench and adversarial testing rules
-globs:
-  - "**/*_test.go"
-  - "**/test/**"
-  - "**/reconcilebench/**"
-  - "**/*.yaml"
-  - "**/*.yml"
-alwaysApply: false
----
-
 # ReconcileBench Testing Rules
 
 The first goal is defect discovery, not certification.

@@ -10,9 +10,10 @@ result behaves correctly under failure, is not.
 
 *Capabilities are declared. Resilience is demonstrated.*
 
-> **Status: pre-implementation.** Nothing is built. The project is before its first decision
-> gate, and its core differentiation claim is under active falsification. Nothing here should
-> be read as a description of working software.
+> **Status: Gate 1 closed (2026-09-13).** ReconcileBench is an engine-agnostic
+> oracle-and-agent layer, not a new chaos engine. See `docs/context/GATE1.md`.
+> Implementation starts at the fixture. Nothing here should be read as a description
+> of production software.
 
 ## Where to start
 
@@ -21,8 +22,10 @@ result behaves correctly under failure, is not.
 | new to the project | `docs/PROJECT-CONTEXT.md` |
 | picking up work | `docs/ROADMAP.md` |
 | a coding agent | `AGENTS.md` |
-| checking a differentiation claim | `docs/context/PRIOR_ART.md` |
+| checking a differentiation claim | `docs/context/PRIOR_ART.md`, then `docs/context/GATE1.md` |
 | wondering why a decision was made | `docs/context/DECISIONS.md`, then `sources/` |
+| an MLE wanting an operator from English | `.cursor/skills/new-operator/` |
+| checking launch readiness | `docs/process/LAUNCH.md` |
 
 ## Layout
 
@@ -34,15 +37,20 @@ docs/
   context/
     CURRENT_STATE.md               consolidated latest state
     DECISIONS.md                   decision register + dated change log
+    GATE1.md                       product-shape decision (2026-09-13)
     PRIOR_ART.md                   what already exists, and what that costs the thesis
     FALSIFICATION_EXECUTION.md     F0–F6 workstreams and gate model
     PROJECT_HISTORY.md             how the current direction emerged
     ENGINEERING_STANDARDS.md       repo shape, CI baseline, release artefacts
     REPO_TOPOLOGY.md               which repos exist and which must not yet
+  adr/
+    ADR-0001-engine-agnostic-architecture.md
+  surveys/                         public prior-art surveys
   projects/                        per-project context: reconcilebench, k8sbricks, …
   process/                         Cursor workflow, org bootstrap checklist
 sources/                           historical documents, verbatim, superseded
 .cursor/rules/                     agent rules, vendored into every OpenReconcile repo
+.cursor/skills/                    project Skills (new-operator, contribute, verify, disclose)
 ```
 
 ## A note on `sources/`
@@ -58,9 +66,9 @@ tier in `AGENTS.md`. Do not implement from them.
 
 ## Not yet written
 
-Tracked honestly rather than created as empty files: `CONVENTIONS.md`, `GOVERNANCE.md`,
-`MAINTAINERS.md`, `ARCHIVAL.md`, `DISCLOSURE.md`, `SECURITY.md`, RFC/ADR templates. Each has
-a trigger recorded at the end of `docs/ROADMAP.md`.
+`DISCLOSURE.md` and `SECURITY.md` now exist. Still to write: `CONVENTIONS.md`,
+`GOVERNANCE.md`, `MAINTAINERS.md`, `ARCHIVAL.md`. RFC/ADR: ADR-0001 and the
+KubeReserve RFC exist; keep adding numbered ADRs.
 
 ## Licence
 

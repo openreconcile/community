@@ -5,7 +5,8 @@ been decided, what has been deliberately rejected, and what remains open. It exi
 a new contributor or coding agent does not re-propose approaches that were already
 evaluated and dismissed.
 
-**Status:** Pre-implementation. Nothing is built. The project is before its first decision gate.
+**Status:** Gate 1 closed 2026-09-13 (`context/GATE1.md`). Product shape is an
+engine-agnostic oracle-and-agent layer. Implementation starts with the fixture.
 
 **Provenance:** consolidated September 2026 from two independent write-ups of the same
 planning history. The full argument chain is preserved verbatim in `../sources/`. Where this
@@ -23,12 +24,18 @@ architecture, and proving the result behaves correctly under failure, is not.
 
 Two tracks:
 
-- **Track A — Assurance.** `ReconcileBench`: a tool that injects faults *during*
-  reconciliation and measures whether a controller converges. The claim is **defect
-  discovery, not certification.**
+- **Track A — Assurance.** `ReconcileBench`: a scenario, status-contract oracle, and
+  agent loop **above existing perturbation engines** (operator-chaos, envtest, chainsaw;
+  Acto optional). It does **not** own a fault-injection engine. The claim is **defect
+  discovery, not certification.** See `adr/ADR-0001-engine-agnostic-architecture.md`.
 - **Track B — Reference implementations.** A small number of production Kubernetes control
   planes built to shared conventions, used as proving grounds for Track A. **One active at
   a time.**
+- **Track C — MLE front door.** Portable Skills, then `openreconcile new`, then a hosted
+  NL demo after k8sbricks exists. Hero user: an MLE productionising an existing ML tool.
+  The slogan *Build a Kubernetes operator in natural language* is gated on the
+  KubeReserve greenfield example being replayed by someone other than the author.
+  k8sbricks is the AI/ML proof point.
 
 **Positioning line:** *Capabilities are declared. Resilience is demonstrated.*
 
@@ -43,9 +50,9 @@ Capability Level verification, which is not what this is.
 | `openreconcile.dev` | Registered — held, unused until Gate 1 |
 | `github.com/openreconcile` | Registered, created 2026-09-12 |
 
-Canonical domain is **not yet declared**. If Gate 1 concludes the project is a tool rather
-than a community, `.dev` may become canonical. Do not hard-code either into anything
-irreversible.
+Gate 1 kept the community + tool split: `.org` remains primary. `.dev` may host the
+developer/docs surface and, later, the NL demo. Do not hard-code either into a public
+API group.
 
 ---
 
@@ -89,8 +96,13 @@ Separately, **Operator Capability Levels I–V** exist as a maturity taxonomy. O
 renders them from what the operator *claims* in its ClusterServiceVersion. Nothing verifies
 the claim. That part of the positioning is unaffected.
 
-**All of this is the subject of falsification workstreams F0 and F1. Do not treat any of it
-as settled, and do not write docs or code comments that assert it.**
+**Gate 1 closed this claim.** Generic mid-reconcile injection is REFRAMED (Sieve did it;
+operator-chaos does it). The unclaimed remainder is the status-contract oracle,
+source-derived target models, and machine-actionable evidence. Do not write docs or
+comments that reassert “we inject faults during reconciliation” as a novelty claim.
+
+A fourth tool, **operator-chaos** (`opendatahub-io/operator-chaos`), is the maintained
+engine we adopt. See `context/PRIOR_ART.md` §7.
 
 ---
 
@@ -104,8 +116,9 @@ These are settled. Do not reopen without new evidence.
 4. **Operator-or-Not** — never assume a project needs an operator. "Do not build an
    operator" is a valid, desirable outcome.
 5. **Upstream-first** — prefer contributing to the correct upstream over owning a fork.
-   This now applies to the assurance tooling itself: contributing to Acto, or reviving
-   Sieve, may beat a new tool. F0 decides.
+   Applies to assurance tooling: adopt operator-chaos as an engine; contribute
+   complementary layers (oracle, derive, evidence) rather than a fifth injector.
+   OpenEnv work is an upstream `KubernetesProvider`, not a new org repo.
 6. **Reuse existing control planes** — do not recreate Kubernetes, KServe, KubeRay,
    Kubeflow, Crossplane, or mature upstream operators.
 7. Adversarial scenario generation must be independent of implementation generation.
@@ -154,8 +167,10 @@ pinned commit instead. ConfigMap script injection is a footnote for tiny scripts
 headline pattern.
 
 ### Upjet / Terraform-derived generation
-Rejected for k8sbricks. Inherits Terraform's runtime, state, and failure modes, and would
-make us the fourth identical provider behind an incumbent with 209 managed resources.
+Rejected for k8sbricks. Inherits Terraform's runtime, state, and failure modes.
+`glalanne/provider-databricks` is the live Crossplane incumbent (v2.5.0, 2026-08-31).
+k8sbricks exists only if Kubernetes-native reconciliation, OIDC-first auth, and encoded
+Databricks domain knowledge are real differentiators — not because the space is empty.
 
 ### Bare Pods from a controller
 Rejected. Bare pods do not reschedule or restart. For a training job that is data loss.
@@ -264,17 +279,13 @@ simulation. Multi-cluster is v2, made additive by six v1 choices (UID-based tagg
 kube-system UID as cluster identity, split binaries, tag-as-source-of-truth, cluster label on
 metrics, stay on v1alpha1). Start with one provider.
 
-### Environment pooling — "the OpenEnv operator" (candidate)
+### Environment pooling — REFRAMED to upstream OpenEnv (2026-09-13)
 
-**The CR boundary is the pool, never the episode.** RL rollouts check out and release
-environments thousands of times per second; leases as custom resources would melt etcd.
-Control plane owns pool shape; an in-memory data-plane broker owns leases.
-
-`EnvironmentClass` + `EnvironmentPool`. Two binaries — manager and broker — which scale
-differently and must not share a chart lifecycle. Protocol-agnostic behind a small interface
-(reset/step/health), shipping only the OpenEnv provider. OpenEnv has multi-org governance
-(committee including Modal and Prime Intellect) and evolves by RFC, so protocol versions
-should be providers rather than breaking CRD changes.
+Do **not** create an OpenReconcile `EnvironmentPool` operator. Alibaba’s OpenSandbox
+already ships `Pool` / `BatchSandbox` with pre-warmed buffers and batch RL delivery.
+OpenEnv core lists `KubernetesProvider` as an unimplemented placeholder. Track B work
+here is an **upstream contribution** to `meta-pytorch/OpenEnv`. See
+`projects/OPENENV_ENVPOOL.md`.
 
 ### Workload runner — "the SmolAgent operator" (candidate)
 
@@ -396,28 +407,24 @@ Full text belongs in `CONVENTIONS.md` (not yet written). Summary:
 
 ## 9. Open Questions
 
-Unresolved. Do not assume answers.
+Closed at Gate 1 unless marked open. See `context/GATE1.md`.
 
-1. **Is ReconcileBench genuinely differentiated, given Sieve and Acto?** Workstreams F0 and
-   F1. Most likely outcome is REFRAMED: a scenario library and convergence oracle, or a
-   maintained productisation of a proven research approach.
-2. **Should we build at all, or contribute to Acto / revive Sieve?** New question, forced by
-   the prior-art correction and by decision 5. F0.
-3. **Will anyone trust findings from an unknown org?** F2.
-4. **Does anyone want the conformance layer, or only the test packs?** F3.
-5. **Do the assurance work and the operators belong in one org?** F4. There is a real
-   conflict-of-interest exposure in grading others' controllers while shipping your own.
-6. **Is the AI/ML framing technical or go-to-market?** F5a/F5b. Likely outcome:
-   general-purpose tool, AI/ML as first market.
-7. **Does target onboarding cost scale?** F6. Acto's push-button onboarding is the bar to
-   beat. If every target needs bespoke proxies, ignore rules, and convergence logic, the
-   generic-tool thesis fails economically.
-8. **k8sbricks name vs API identity.** Blocks the first public CRD.
-9. **Compute budget ceiling.** Undecided, and it constrains what coverage can honestly be
-   claimed. Must be set before the scenario matrix is designed, not discovered afterwards.
-10. **External reviewer acquisition.** Three categories wanted, one credible name each:
-    a controller-runtime/Kubernetes reviewer, a distributed-systems/testing reviewer, and an
-    AI/ML platform reviewer.
+1. **Is ReconcileBench a new injection category?** **No.** Closed. Engine-agnostic oracle
+   layer (`ADR-0001`).
+2. **Build vs contribute?** **Both, split.** Own the oracle/derive/evidence/agent layers;
+   adopt operator-chaos as an engine; OpenEnv is upstream-only.
+3. **Will anyone trust findings from an unknown org?** **Open — F2.**
+4. **Does anyone want the conformance layer, or only the test packs?** **Open — F3.**
+5. **Do the assurance work and the operators belong in one org?** **Resolved by
+   donatability**, not by a split. Watch conflict-of-interest; do not delay the oracle.
+6. **Is the AI/ML framing technical or go-to-market?** **Closed.** F5a general tool,
+   F5b AI/ML first market and MLE hero user.
+7. **Does target onboarding cost scale?** **Provisionally yes if we adopt engines.**
+   Still measure F6 on fixture → k8sbricks → two third-party targets.
+8. **k8sbricks name vs API identity.** Still blocks the first public CRD.
+9. **Compute budget ceiling.** Undecided. Set before the scenario matrix is published.
+10. **Does KubeReserve survive Karpenter ODCR support?** Lifecycle (create/TTL/budget/
+    sweeper) is the remaining wedge. Confirm in the API RFC before cloud-SDK work.
 
 ---
 

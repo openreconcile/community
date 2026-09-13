@@ -1,41 +1,54 @@
-# OpenEnv / Environment Pooling — Project Context
+# OpenEnv — Project Context
 
-## User intent
+## Decision (2026-09-13)
 
-OpenEnv is one of the first desired OpenReconcile project areas.
+**Do not create an OpenReconcile environment-pool operator or repo.**
 
-## Current architecture recommendation
+Contribute a `KubernetesProvider` upstream to
+[`meta-pytorch/OpenEnv`](https://github.com/meta-pytorch/OpenEnv)
+(docs still list it as 🚧 planned; the class is a placeholder).
 
-Do **not** automatically create a bespoke `OpenEnv Operator`.
+## Prior-art triage
 
-The stronger current abstraction is a generic environment-pool control plane.
+### OpenSandbox already shipped the pool design
 
-### Control-plane boundary
+[opensandbox-group/opensandbox](https://github.com/opensandbox-group/opensandbox)
+implements `Pool` and `BatchSandbox` custom resources:
 
-The CR boundary is the **pool**, not the episode/rollout lease.
+- pre-warmed pod buffers;
+- `PoolMin` / `PoolMax` capacity;
+- automatic allocation and deallocation;
+- batch delivery aimed at high-throughput agentic-RL;
+- pause/resume via rootfs snapshots.
 
-High-frequency RL rollouts may check out/release environments thousands of times. Representing each lease as a CR would put inappropriate high-frequency data-plane work into etcd/Kubernetes APIs.
+`PoolReconciler.scalePool` already computes `desiredSchedulableCnt` against
+buffer counts and evicts redundant pods.
 
-### Likely API shape
+The earlier OpenReconcile design call — “the CR boundary is the pool, never the
+episode” — is therefore implemented. Rebuilding it would violate upstream-first
+and Operator-or-Not.
 
-- `EnvironmentClass`
-- `EnvironmentPool`
+### OpenEnv core is the right upstream
 
-### Provider model
+- Runtime providers already include Docker, Swarm, UV, Daytona, Azure Container
+  Apps, Modal.
+- `KubernetesProvider` is the missing backend.
+- Governance is a multi-org technical committee (Meta-PyTorch, Nvidia,
+  Microsoft, Hugging Face, Modal, Prime Intellect, and others).
+- Issue #441 documents third parties already wiring OpenEnv onto their own
+  Kubernetes orchestrators.
 
-Protocol-specific behaviour sits behind a small provider interface.
-
-OpenEnv is the first provider.
-
-High-frequency lease/check-out behaviour belongs in an in-memory/data-plane broker.
-
-## Before implementation
-
-- validate current OpenEnv upstream direction;
-- avoid competing with upstream architecture;
-- write an RFC;
-- settle permanent project/repo/API name only after the abstraction is approved.
+A provider that starts a pod/service, returns a `base_url`, and implements
+`wait_for_ready` / `stop` is a fraction of a new operator and is the advertised
+gap.
 
 ## What must not happen
 
-Do not create one Kubernetes CR per episode simply because CRDs are available.
+- Do not create one Kubernetes CR per episode.
+- Do not create `EnvironmentClass` / `EnvironmentPool` under this org.
+- Do not compete with OpenSandbox on pooling.
+
+## Delivery
+
+Draft contribution (workspace, not an org repo):
+`contrib/openenv-kubernetes-provider/` next to this community tree.

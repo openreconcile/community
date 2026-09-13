@@ -16,9 +16,8 @@ Governance, conventions, disclosure policy, decision/RFC process, project-level 
 
 ### `controller-template`
 
-**Deferred — do not create yet.** Decided 2026-09-13. A scaffold written before two real
-controllers exist encodes guesses, and this file previously contradicted `ROADMAP.md` on the
-point. When it is eventually created, it should standardise:
+**Authorised after the fixture proves clean.** Seeded from `reconcilebench-fixture`,
+not invented up front. When created, it should standardise:
 - Kubebuilder/controller-runtime layout;
 - Makefile targets;
 - CI;
@@ -50,13 +49,9 @@ Databricks control plane. First serious production target: Compute/Cluster.
 Cloud capacity control plane. Start with one provider.
 
 ### OpenEnv-related project
-Do not lock a repo/API name until the environment-pool RFC is approved.
 
-Current likely shape:
-- `EnvironmentClass`
-- `EnvironmentPool`
-- OpenEnv provider
-- in-memory/high-frequency leasing data plane outside Kubernetes CRs.
+**No org repo.** Contribute `KubernetesProvider` upstream to `meta-pytorch/OpenEnv`.
+OpenSandbox already implements pool CRs.
 
 ### SmolAgents-related project
 Do not lock a repo/API name until the generic workload/runtime RFC is approved.

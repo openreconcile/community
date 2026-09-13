@@ -5,9 +5,11 @@ exist. That claim is only as good as this file. Every tool that plausibly overla
 here, with its maintenance status and its actual mechanism, so the claim can be checked
 rather than repeated.
 
-**Status of this register:** desk research complete as of September 2026. F0 source-level
-analysis complete — see §6. **Neither tool has been run yet**; execution is the remainder of
-F0.
+**Status of this register:** desk research and source-level F0 complete as of 2026-09-13.
+Gate 1 is closed — see `GATE1.md`. operator-chaos, OpenSandbox, Karpenter ODCR support, and
+the live Databricks Crossplane provider were added the same day. Execution of Sieve/Acto
+against a live operator remains useful F6 telemetry; it is no longer load-bearing for
+build-vs-contribute.
 
 ---
 
@@ -162,12 +164,22 @@ runtimes*, not test harnesses. Do not reject or ignore either tool on language g
 
 ## 4. Databricks prior art (for k8sbricks)
 
-- `Azure/azure-databricks-operator` — Microsoft, Kubebuilder + Go SDK, experimental, dormant
-  for years.
-- `mach-kernel/databricks-kube-operator` — kube-rs, archived June 2025; README now points
+**Path correction, 2026-09-13.** The live incumbent is `glalanne/provider-databricks`
+(Upbound marketplace id `lalanne/provider-databricks`), not `lalanne/provider-databricks`
+or `upbound/provider-databricks` — those GitHub paths 404. An earlier note that the
+Databricks operator space “may be vacant” was wrong.
+
+- `Azure/azure-databricks-operator` — Microsoft, Kubebuilder + Go SDK, archived, last
+  push 2021-06-04.
+- `mach-kernel/databricks-kube-operator` — kube-rs, archived June 2025; README points
   users at Upjet-generated Crossplane providers.
-- `upbound/provider-databricks` — Upjet, 69 managed resources, stalled at v0.1.x.
-- `lalanne/provider-databricks` — Upjet, v2.x, 209 managed resources. **The live incumbent.**
+- `glalanne/provider-databricks` — **the live incumbent.** Upjet / Crossplane, community
+  provider, latest marketplace release **v2.5.0 (2026-08-31)**. Terraform-derived
+  managed resources. Kubernetes-native reconciliation, OIDC-first auth, and encoded
+  Databricks domain knowledge (`existing_cluster_id`, commit-pinned `git_source`) are
+  still the k8sbricks gap — not “no Databricks provider exists”.
+- `upbound/provider-azure-databricks` — official Upbound provider for *Azure Databricks
+  workspace infrastructure*, not workspace-level compute/jobs/serving.
 - Databricks DABs — renamed in 2026 from "Databricks Asset Bundles" to "Declarative
   Automation Bundles"; `bundle plan -t prod -o json` supports a GitOps apply with an
   approval gate.
@@ -327,10 +339,87 @@ conditions, write-frequency — **VALIDATED** and cheap.
    write.
 4. Search once more for a maintained proxy-based Kubernetes API fault injector.
 5. Decide whether to open a conversation with the Acto maintainers.
+   **Superseded 2026-09-13:** complementary outreach is to operator-chaos, not Acto
+   as the primary upstream. See `GATE1.md` and
+   `process/OPERATOR_CHAOS_OUTREACH.md`.
 
 ---
 
-## 7. Name collision
+## 7. operator-chaos — `opendatahub-io/operator-chaos`
+
+Added 2026-09-13. This is the maintained industry engine that occupies the slot
+ReconcileBench originally claimed.
+
+| | |
+|---|---|
+| Licence | Apache-2.0 (confirm at HEAD before depending) |
+| Language | Go 1.26+ |
+| Home | https://opendatahub-io.github.io/operator-chaos/ |
+| Article | Red Hat Developer, 2026-07-11 |
+
+**What it does.** Tests that an operator restores its *managed resource graph* after
+operator-semantic faults, not merely that pods restart. Knowledge models (`knowledge.yaml`)
+declare what the operator owns. Verdicts are `Resilient` / `Degraded` / `Failed` /
+`Inconclusive`.
+
+**Four modes.** CLI experiments on a live cluster; SDK middleware (API-level faults);
+`chaostransport` (zero-dependency transport interceptor, no controller-runtime required);
+ActionInterceptor / fuzz against a fake client.
+
+**Twenty injection types** across infrastructure (PodKill, NetworkPartition, …),
+configuration (ConfigDrift, CRDMutation, LabelStomping, …), access control (RBACRevoke,
+WebhookDisrupt), and lifecycle (FinalizerBlock, OwnerRefOrphan, SecretDeletion,
+LeaderElectionDisrupt, …).
+
+**What it does not do — the ReconcileBench remainder.**
+
+- No status-contract oracle. Knowledge models describe the resource graph, not
+  `observedGeneration` / condition semantics.
+- Knowledge models are hand-written YAML. No derivation from source or CRDs.
+- Verdicts are human-oriented enums, not machine-actionable fix hints for an agent loop.
+- No MCP / agent interface.
+- No first-class model of an external (non-Kubernetes) API boundary.
+
+**Implication.** Adopt as an engine. Do not compete on injection types. Produce
+`knowledge.yaml` from `reconcilebench derive` so we are a producer in their ecosystem.
+
+---
+
+## 8. Adjacent prior art found the same day
+
+### OpenSandbox — environment pooling
+
+[opensandbox-group/opensandbox](https://github.com/opensandbox-group/opensandbox)
+(Alibaba lineage) already ships a Kubernetes operator with `Pool` and `BatchSandbox`
+CRs: pre-warmed pod buffers, `PoolMin` / `PoolMax`, allocation and deallocation, batch
+delivery for “high-throughput agentic-RL scenarios”, pause/resume via rootfs snapshots.
+`PoolReconciler.scalePool` computes `desiredSchedulableCnt` against buffer counts.
+
+The design call in `projects/OPENENV_ENVPOOL.md` — “the CR boundary is the pool, never
+the episode” — is already implemented.
+
+OpenEnv core (`meta-pytorch/OpenEnv`) lists `KubernetesProvider` as 🚧 planned, a
+placeholder class. Technical committee includes Meta-PyTorch, Nvidia, Microsoft,
+Hugging Face, Modal, Prime Intellect, and others.
+
+**Implication.** Do not build an OpenReconcile environment-pool operator. Contribute
+`KubernetesProvider` upstream.
+
+### Karpenter capacity reservations
+
+Karpenter consumes EC2 On-Demand Capacity Reservations (v1.3), Capacity Blocks for ML
+(v1.6), and interruptible reservations (v1.10) via `ReservedCapacity` and
+`capacityReservationSelectorTerms`. It does **not** create, expire, budget, or sweep
+the reservations themselves.
+
+**Implication.** KubeReserve’s remaining wedge is reservation *lifecycle* (create /
+TTL / budget / sweeper / adoption / orphan recovery), one cloud at a time — not
+“Kubernetes that uses reserved capacity”.
+
+---
+
+
+## 9. Name collision
 
 An older, dormant "Open Reconcile" exists — Rebecca Lawler's project, cloned at
 `OpenRefine/open-reconcile`, Java package `com.googlecode.openreconcile`. Dead since ~2012.
@@ -342,17 +431,14 @@ entirely.
 
 ---
 
-## 8. Open prior-art questions for F0
+## 10. Open prior-art questions
 
-1. Does Sieve still build and run against current Kubernetes (1.34/1.35) and current
-   `controller-runtime`, or has it bit-rotted since September 2024?
-2. What is the real porting cost for Sieve, in hours, on our own fixture?
-3. Can Sieve express a fault at an **external** API boundary at all?
-4. How many of our seven seeded defects does Sieve detect? Acto? Either with custom oracles?
-5. Does Acto's `custom` oracle hook plus its `differential` oracle already amount to a
-   convergence oracle?
-6. Does any maintained proxy-based Kubernetes API fault injector exist that we have still
-   not found? The Addendum's API-server-boundary interception idea assumed none.
-7. Are the authors of either project reachable and interested? An upstream contribution to
-   Acto, or adopting Sieve, may be a better first move than a new tool — the project's own
-   upstream-first rule points that way.
+F0's product decision is closed (`GATE1.md`). These remain as measurement questions
+for fixture-era F1/F6, not as blockers.
+
+1. How many of the eight fixture defects does operator-chaos detect with a derived
+   `knowledge.yaml` and no custom oracle?
+2. How many does Acto detect? chainsaw? envtest?
+3. What is Target Onboarding Cost, in hours, for the fixture on each engine?
+4. Does operator-chaos grow a status-contract check if we propose one upstream?
+5. Confirm `operator-chaos` licence and Go-version floor at the commit we pin.

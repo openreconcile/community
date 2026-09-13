@@ -1,8 +1,3 @@
----
-description: OpenReconcile constitution — scope, stack, precedence, and things never to propose
-alwaysApply: true
----
-
 # OpenReconcile — Standing Constraints
 
 Full background is in `docs/PROJECT-CONTEXT.md`; in other repos, in the vendored copy at the

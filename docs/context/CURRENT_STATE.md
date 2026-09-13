@@ -1,7 +1,7 @@
 # OpenReconcile — Current State
 
-**Status:** implementation bootstrap / pre-Gate-1  
-**Date:** September 2026
+**Status:** Gate 1 closed / fixture implementation
+**Date:** 2026-09-13
 
 This is the latest consolidated project state. It overrides conflicting historical wording in `sources/`.
 
@@ -18,55 +18,38 @@ The umbrella name is considered locked for practical execution.
 
 OpenReconcile is an open-source, vendor-neutral community focused on improving the resilience and correctness of Kubernetes controllers.
 
-ReconcileBench is the first technical wedge.
+The hero user is an **MLE** who already has an ML tool and wants it productionised on Kubernetes without becoming a controller-runtime author.
 
-The initial claim is:
+ReconcileBench is the first technical wedge. After Gate 1 it is:
 
-> find controller defects ordinary tests miss by disrupting reconciliation and measuring whether the system returns to correct state.
+> a scenario library, status-contract oracle, and agent loop over existing perturbation engines.
 
-**That claim is not yet differentiated and must not be published as though it were.** Sieve
-(OSDI '22) already does deterministically-timed mid-reconcile fault injection and Acto
-already does automated operator-correctness testing; see `PRIOR_ART.md`. The narrower
-defensible position — a maintained, low-onboarding-cost productisation of a proven research
-approach, strongest at the external-API boundary — is what F0 and F1 exist to test.
+Do not position it as a new chaos category. Do not position OpenReconcile as a certification authority.
 
-Do not position OpenReconcile as a certification authority at this stage.
+Public line until the oracle catches the eight fixture defects: *Capabilities are declared. Resilience is demonstrated.*
 
-AI/ML is the first intended market/application area, but the core tool may be general-purpose. F5 explicitly tests that question.
+After L3 has been replayed by someone other than the author: *Build a Kubernetes operator in natural language.* k8sbricks is the AI/ML proof point.
+
+AI/ML is the first market. The pipeline is general-purpose Kubernetes.
 
 ## Immediate goal
 
-Do not build the full historical roadmap.
+Implement Gate 1’s surviving product:
 
-Complete Gate 1 cheaply:
+1. `reconcilebench-fixture` — clean Widget + eight defect branches, consumable by operator-chaos, envtest, chainsaw.
+2. Portable agent context + Skills (`new-operator`, `contribute`).
+3. ReconcileBench core (scenario + adapters), oracle, `derive`, evidence, MCP.
+4. `controller-template` seeded from the fixture.
+5. `openreconcile new` CLI.
+6. Operators one at a time: k8sbricks Compute, upstream OpenEnv `KubernetesProvider`, KubeReserve.
 
-1. run the **F0 prior-art execution spike** against Sieve and Acto — two days, runs first;
-2. build `reconcilebench-fixture`, designed to be consumable by every candidate harness;
-3. maintain a clean control and seeded-defect variants;
-4. run F1 prior-art challenge, with Sieve and Acto in the candidate set;
-5. run F5a technical-scope challenge;
-6. run F5b market-wedge challenge;
-7. decide what ReconcileBench actually is.
-
-Possible Gate-1 outcomes include:
-- distinct controller-resilience testing capability;
-- narrower hard-failure-class tool;
-- scenario library + convergence oracle over existing tools;
-- general Kubernetes resilience tool, with AI/ML as first market;
-- upstream contribution to Acto or revival of Sieve rather than a third tool;
-- no sufficiently differentiated product.
-
-## After Gate 1
-
-Build only the surviving product thesis.
-
-Do not stop building to create months of additional falsification machinery.
+## After the fixture
 
 Collect later evidence as a by-product of real work:
 
 - F2: trust/maintainer response;
 - F3a: convention interest from a simple published conventions document;
-- F4: coupling/neutrality evidence;
+- F4: coupling/neutrality evidence (watch, already decided via donatability);
 - F6: Target Onboarding Cost telemetry.
 
 Only build F3b (formal conformance suite/framework) if F3a shows genuine demand.
@@ -84,19 +67,17 @@ At minimum:
 - compute cost;
 - maintenance events.
 
-If black-box external onboarding is consistently expensive but author-side integration is cheap, ReconcileBench may be reframed as an SDK/framework for controller authors. That outcome is acceptable and may collapse the independent-assurance/conformance story.
+`reconcilebench derive` is the lever. If every target still needs a hand-written knowledge model, reframe as an author SDK.
 
 ## Current project directions
 
 ### ReconcileBench
 
-Highest priority. Black-box first. Investigate API-server-boundary interception — noting
-that Sieve already interposes at the API server for stale-state testing, so this is partly
-solved prior art rather than an open field.
+Highest priority. Engine-agnostic. See `GATE1.md` and ADR-0001. Black-box first.
 
 ### k8sbricks
 
-First serious production controller after the fixture/Gate-1 work.
+First serious production controller after the fixture.
 
 Current staging:
 1. Compute/Cluster
@@ -106,47 +87,25 @@ Do not implement the full Databricks surface first.
 
 Before a public CRD is released, settle the permanent project name/domain/API-group identity.
 
+The Crossplane incumbent `glalanne/provider-databricks` is live. Differentiate on Kubernetes-native reconciliation, OIDC, and encoded domain knowledge.
+
 ### KubeReserve
 
-A dedicated cloud-capacity control plane remains a credible project direction.
+Reservation *lifecycle* control plane (create, TTL, budget, sweeper, adoption, orphans).
+Karpenter already *consumes* ODCRs. Start with one provider. RFC before cloud SDK.
 
-Start with one provider only.
+### OpenEnv
 
-Safety semantics from current design:
-- dry-run-oriented safe starting posture;
-- mandatory TTL on claims/reservations;
-- admission-time budget ceiling;
-- independent sweeper;
-- no required Karpenter dependency.
-
-Exact public API requires an RFC.
-
-### OpenEnv-related control plane
-
-Do not assume a bespoke `OpenEnv Operator` is the final abstraction.
-
-Current architecture recommendation:
-- control-plane boundary is the environment pool, not individual episodes;
-- `EnvironmentClass` + `EnvironmentPool`;
-- high-frequency lease/check-out data plane should not create CRs per episode;
-- OpenEnv is the first provider/protocol.
-
-Treat naming (`envpool` or other) as provisional until RFC/upstream validation.
+Upstream `KubernetesProvider` contribution to `meta-pytorch/OpenEnv`. No org repo.
 
 ### SmolAgents-related control plane
 
-Do not assume a bespoke `SmolAgent Operator`.
-
-Current architecture recommendation:
-- generic `MLRuntime` + `MLWorkload`;
-- SmolAgents is the first runtime/provider;
-- future frameworks should be declarative contributions where possible rather than separate Go operators.
-
-Treat naming as provisional until RFC.
+Still deferred. Generic `MLRuntime` + `MLWorkload` if it ever starts.
 
 ## Deliberately deferred
 
 Do not build yet:
+- hosted NL demo (gated on k8sbricks + oracle);
 - Forge;
 - Radar;
 - Catalog;

@@ -2,19 +2,41 @@
 
 ## Goal
 
-Find Kubernetes controller defects that ordinary tests miss by introducing failures during reconciliation and determining whether the controller semantically converges.
+Find Kubernetes controller defects that ordinary tests miss by running existing
+perturbation engines against a target and asking a **status-contract oracle** whether
+the controller semantically converged.
 
-## Initial claim
+Defect discovery, not certification. Not a new chaos engine.
 
-Defect discovery, not certification.
+## Architecture (Gate 1 / ADR-0001)
+
+ReconcileBench owns:
+
+- scenario specification;
+- status-contract oracle (`observedGeneration`, conditions, generation, semantic
+  convergence defined against Anvil/ESR);
+- `reconcilebench derive` — target models from source and CRDs, exportable as
+  operator-chaos `knowledge.yaml`;
+- machine-actionable evidence and an MCP server.
+
+It does **not** own a fault injector. Engines:
+
+| Engine | Role |
+|---|---|
+| operator-chaos | first-class live-cluster / transport / interceptor engine |
+| envtest | first-class in-process controller tests |
+| chainsaw | first-class declarative cluster assertions |
+| Acto | optional adapter |
 
 ## Prior art — read before anything else
 
-`../context/PRIOR_ART.md`. **Sieve** already does deterministically-timed mid-reconcile
-fault injection (dormant since September 2024) and **Acto** already does automated
-operator-correctness testing with a lower onboarding cost than anything planned here. The
-original "nothing does this" framing is retired. Whether to build at all is an open question
-answered by the F0 spike.
+`../context/PRIOR_ART.md` and `../context/GATE1.md`.
+
+Sieve already did timed mid-reconcile injection (dormant). operator-chaos already
+does operator-semantic faults with knowledge models and verdicts (maintained).
+Acto already does push-button correctness testing and masks status fields.
+
+The original "nothing does this" framing is retired.
 
 ## Ground-truth fixture
 
@@ -22,7 +44,8 @@ answered by the F0 spike.
 - clean control;
 - seeded defects.
 
-Initial defect classes discussed include:
+Defect classes:
+
 - duplicate child/external creation after restart around create/status boundary;
 - finalizer deadlock;
 - missing `observedGeneration`;
@@ -30,10 +53,12 @@ Initial defect classes discussed include:
 - stale-cache race;
 - retry storm on terminal error;
 - ownership/concurrent-reconcile conflict;
-- unobserved event — controller misses an event and never converges, i.e. is not truly
-  level-triggered (added 2026-09-13 to match Sieve's unobserved-state pattern).
+- unobserved event — controller misses an event and never converges.
 
-Exact list may change based on F0/F1.
+The fixture must be consumable by operator-chaos, envtest, and chainsaw.
+
+**Write seeded defects by hand.** A bug generated from a description of the bug is
+the textbook version.
 
 ## Convergence
 
@@ -55,35 +80,43 @@ Invariant classes:
 - recovery;
 - deletion.
 
-## Fault model
+## Status-contract oracle
 
-Black-box first.
+Primary differentiator. Must detect, at minimum:
 
-Investigate API-server-boundary interception to:
-- fail selected calls;
-- delay calls;
-- inject conflicts/throttling;
-- create deterministic partial-success windows.
+- `status.observedGeneration` never updated, or not equal to `metadata.generation`
+  after a successful reconcile of that generation;
+- missing or contradictory `metav1.Condition` (`Ready`, `Ready` true with an
+  actionable error, stale `observedGeneration` on the condition);
+- spec/status split-brain after a partial external write.
 
-Grey-box/instrumented modes are roadmap concepts, not Milestone-0 requirements.
+Sieve and Acto mask these fields. If our oracle also ignores them, we have no product.
 
-## F1
+## F1 measurement (post-Gate-1)
 
-Before claiming a new testing category, try to reproduce the value using existing tools.
-
-F1 must capture both:
-- coverage count;
-- significance of undetected classes.
+Gate 1 already reframed the product. Fixture-era F1 measures coverage per engine
+against the eight defects. Report detected / not detected / detected only with
+substantial target-specific code. Record Target Onboarding Cost.
 
 ## F6
 
 Record Target Onboarding Cost for every new subject.
 
-A REFRAMED outcome toward an operator-author SDK is acceptable.
+`derive` is the economic lever. A REFRAMED outcome toward an operator-author SDK
+is acceptable if derive fails to collapse per-target YAML.
+
+## Agent / MLE surface
+
+- Skills: `verify` (Phase 6), used with `new-operator` / `contribute`.
+- MCP server: detect → evidence → fix → re-verify.
+- CLI `openreconcile new` after `controller-template` exists.
+- Hosted NL demo after k8sbricks Compute exists.
+- Do not advertise the NL slogan before the oracle passes the fixture.
 
 ## Avoid
 
 - claiming certification;
 - building a generic chaos engine;
-- reimplementing fault primitives that mature tools already provide;
-- reporting third-party findings publicly before disclosure/remediation policy.
+- reimplementing fault primitives that operator-chaos, envtest, or chainsaw provide;
+- reporting third-party findings publicly before disclosure/remediation policy;
+- asserting “we inject faults during reconciliation” as a novelty claim.
