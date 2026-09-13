@@ -62,6 +62,10 @@ Tracked honestly rather than created as empty files: `CONVENTIONS.md`, `GOVERNAN
 `MAINTAINERS.md`, `ARCHIVAL.md`, `DISCLOSURE.md`, `SECURITY.md`, RFC/ADR templates. Each has
 a trigger recorded at the end of `docs/ROADMAP.md`.
 
+## Licence
+
+Apache License 2.0 — see `LICENSE`.
+
 ## Non-affiliation
 
 OpenReconcile is not affiliated with, endorsed by, or sponsored by Databricks, Amazon Web

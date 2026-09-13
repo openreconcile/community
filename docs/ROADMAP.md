@@ -291,8 +291,8 @@ certification, `controller-template`. All post-gate.
 Tracked here rather than created as empty files, because governance theatre is worse than an
 honest gap.
 
-- `LICENSE` — needs a decision. Apache-2.0 is the ecosystem default for code; docs-only
-  repos often use CC-BY-4.0. Pick before the repo is publicised
+- ~~`LICENSE`~~ — Apache-2.0, added 2026-09-13
+
 - `CONVENTIONS.md` — Milestone 1, extracted from implementation experience
 - `GOVERNANCE.md`, `MAINTAINERS.md`, `ARCHIVAL.md` — before the second project repo
 - `DISCLOSURE.md` — before F2
