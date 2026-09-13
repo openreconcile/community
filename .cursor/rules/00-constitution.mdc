@@ -1,0 +1,95 @@
+---
+description: OpenReconcile constitution — scope, stack, precedence, and things never to propose
+alwaysApply: true
+---
+
+# OpenReconcile — Standing Constraints
+
+Full background is in `docs/PROJECT-CONTEXT.md`; in other repos, in the vendored copy at the
+repo root. Read it before any architectural work. This file is the short form that always
+applies.
+
+## Source-of-truth precedence
+
+`AGENTS.md` → `docs/PROJECT-CONTEXT.md` → `docs/ROADMAP.md` → `docs/context/*` →
+`docs/projects/*` → `docs/process/*` → `sources/*` (historical only, contains superseded
+decisions, never a current specification).
+
+## Core principles
+
+- Open-source and vendor-neutral.
+- Defect discovery before certification.
+- Operator-or-not: an operator is one possible answer, not the default answer.
+- Upstream-first — including for the assurance tooling itself.
+- Reuse existing control planes.
+- Human-governed architecture and security decisions.
+- Independent adversarial review.
+- Donatability: avoid API identities that make future transfer require user migration.
+- Build narrowly; evidence unlocks scope.
+
+## Project state
+
+Pre-implementation, before the first decision gate. The core differentiation claim is
+**unproven and partially contradicted** — Sieve (OSDI '22) already performs
+deterministically-timed mid-reconcile fault injection and Acto already performs automated
+operator-correctness testing. Read `docs/context/PRIOR_ART.md` before making any claim about
+what does not exist. Do not write documentation or code comments that assert differentiation
+as established.
+
+## Stack — not negotiable
+
+- **Go** with **controller-runtime / Kubebuilder** for all production controllers
+- **chainsaw** for declarative assertions (not kuttl — deprecated, site defunct)
+- **Chaos Mesh** or **Litmus** for fault primitives — do not reimplement pod kill or node drain
+- **envtest** for controller-level tests
+- **cobra** for CLIs
+- Helm charts distributed via OCI, signed with cosign
+
+This constrains controller runtimes, not test harnesses. Sieve and Acto are Python and are
+evaluated on merit.
+
+## Never propose these
+
+Each was evaluated and rejected. Reasoning is in `docs/PROJECT-CONTEXT.md` §4.
+
+- Kopf or any Python-based production operator
+- Importing ML libraries into a controller's dependency tree
+- The org name inside an API group (e.g. `dbx.openreconcile.io`)
+- A frozen shared `apis/meta` Go module — conventions lock now, structs are extracted after
+  two production controllers
+- A custom condition type instead of `metav1.Condition`
+- Literal write quiescence as the definition of convergence
+- PAT / static token in a Secret as the default auth path
+- Source code inlined into a CR spec field
+- Upjet or Terraform-derived resource generation
+- Bare Pods created directly by a controller
+- CRDs shared across projects
+- A separate operator per ML framework (they are declarative `MLRuntime` CRs)
+- Building a registry or storefront site
+- An SDK that applies manifests to a cluster from a developer machine
+
+## Scope discipline
+
+- **One Track B project active at a time.** Currently: the F0 spike, then the fixture.
+- Do not scaffold `controller-template`, `kubereserve`, environment pooling, or the workload
+  runner. They are candidates behind a decision gate, tracked as issues.
+- Do not build Forge, Radar, Catalog, or Drift. All post-gate.
+
+## Blocked until resolved
+
+**Do not run `kubebuilder init` for k8sbricks and do not commit any public
+`groupversion_info.go` for it.** The project name is provisional but API groups embed it
+permanently. This contradiction must be resolved first. The fixture uses the throwaway domain
+`fixture.openreconcile.org` and is unaffected.
+
+## Writing style for docs and READMEs
+
+Claims must match evidence. "Finds reconciliation defects that ordinary tests miss" is
+supportable once demonstrated. "Verified", "certified", "production-ready" are not, and
+"resilient" is a property to demonstrate, never to assert. Positioning line:
+*Capabilities are declared. Resilience is demonstrated.*
+
+Never let "reconcile" stand alone in titles, descriptions, or `og:` tags — always "Kubernetes
+controller reconciliation". A dormant data-reconciliation project of the same name exists,
+and in the data world "reconciliation" means entity matching. Avoid the hyphenated form
+`open-reconcile` entirely.

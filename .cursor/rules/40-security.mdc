@@ -1,0 +1,23 @@
+---
+description: Security rules for OpenReconcile controllers and tooling
+globs:
+  - "**/*.go"
+  - "**/*.yaml"
+  - "**/*.yml"
+  - "**/Dockerfile"
+  - "**/*.sh"
+alwaysApply: false
+---
+
+# Security Rules
+
+- Never log credentials, tokens, private keys, or secret values.
+- Prefer workload identity/OIDC/federated identity over long-lived static credentials.
+- Treat cross-namespace secret/credential references as privilege-sensitive.
+- Use least-privilege RBAC.
+- Separate controller identity from workload identity when possible.
+- Admission-time safety checks should reject known-dangerous configurations rather than relying only on reconciliation.
+- Supply-chain output should eventually include SBOM, signatures, and provenance for public releases.
+- Third-party ReconcileBench findings require responsible disclosure before public publication.
+- Do not create hidden backdoors or test-only bypasses in release builds.
+- Destructive cloud actions require explicit lifecycle/deletion semantics and tests.

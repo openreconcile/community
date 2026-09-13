@@ -1,0 +1,39 @@
+---
+description: Repository workflow, CI, and change-management expectations
+alwaysApply: true
+---
+
+# Repository Workflow
+
+Prefer a consistent Makefile interface across projects:
+
+```text
+make tools
+make generate
+make manifests
+make fmt
+make vet
+make lint
+make test
+make test-envtest
+make test-e2e
+make test-reconcile
+make docker-build
+make helm-lint
+make security
+make verify
+```
+
+Not every repository needs every target on day one, but equivalent actions should use equivalent names.
+
+PRs should keep generated files in sync and should not mix unrelated architectural changes.
+
+Use RFC/ADR review for:
+- public API changes;
+- API-group/domain decisions;
+- security-boundary changes;
+- new cross-project conventions;
+- generator architecture;
+- destructive cloud lifecycle semantics.
+
+Use reusable GitHub Actions where possible rather than copy-pasting workflow logic across repositories.

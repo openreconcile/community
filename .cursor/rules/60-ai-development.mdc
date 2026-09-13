@@ -1,0 +1,17 @@
+---
+description: Rules for using Cursor/AI agents in OpenReconcile development
+alwaysApply: true
+---
+
+# AI Development Rules
+
+AI is an engineering accelerator, not the authority.
+
+- Do not invent project policy when context is missing.
+- Cite the project file/decision that justifies architectural choices in PR/RFC prose.
+- Separate builder reasoning from adversarial reviewer reasoning.
+- Do not accept AI-generated tests as sufficient simply because they pass.
+- Ask adversarially: what happens on retry, stale state, concurrent reconcile, partial success, controller restart, API conflict, deletion, timeout, and external drift?
+- Keep repository docs as the durable source of truth; chat history is not.
+- Prefer small, reviewable changes.
+- Never auto-expand the roadmap from historical documents.

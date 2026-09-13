@@ -1,0 +1,37 @@
+---
+description: Reconciliation correctness rules for controllers
+globs:
+  - "**/*.go"
+alwaysApply: false
+---
+
+# Reconciliation Rules
+
+Every reconcile path must be designed for retries, duplicated events, stale reads, crashes, and partial success.
+
+Required properties:
+
+- idempotent reconciliation;
+- explicit observation before mutation;
+- deterministic ownership;
+- terminal vs recoverable error classification;
+- bounded/reasoned retries;
+- safe finalization;
+- adoption semantics for existing external resources where applicable;
+- late initialization where the external system applies server-side defaults;
+- status reflects current desired generation;
+- no dependency on a single lucky ordering of events.
+
+Always examine the dangerous boundary:
+
+```text
+external mutation succeeds
+→ controller crashes or local/status write fails
+→ next reconcile runs
+```
+
+The next reconcile must detect the already-created external state rather than duplicating it.
+
+Do not assume informer/cache reads are perfectly fresh.
+
+Treat deletion/finalizers as first-class reconciliation, not cleanup code appended later.

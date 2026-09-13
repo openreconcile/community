@@ -1,0 +1,20 @@
+---
+description: Rules for generated APIs/controllers and code-generation systems
+globs:
+  - "**/*.go"
+  - "**/generator/**"
+  - "**/generated/**"
+alwaysApply: false
+---
+
+# Generated Code Rules
+
+Generated code is not automatically correct code.
+
+- Keep generated artefacts clearly separated from handwritten hooks/behaviour.
+- Never hand-edit generated files unless the generator explicitly requires it.
+- Generator inputs and overrides must be reviewable.
+- Encode domain-specific operational knowledge via explicit hooks/policies rather than opaque post-generation patches.
+- Generated resources must still satisfy reconciliation, security, adoption, deletion, and status conventions.
+- For k8sbricks, evaluate reuse/adaptation of an existing controller generator before inventing a generator from scratch.
+- A generator spike must prove one representative resource family end-to-end before committing to the architecture.
